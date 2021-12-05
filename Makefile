@@ -21,6 +21,7 @@ endif
 
 # Source, object and binary files
 SRC		= 	main.c \
+			signalHandler.c \
 			crypto.c \
 			requestQueue.c \
 			lruCache.c \
@@ -33,7 +34,8 @@ INC		= 	meteoserver.h
 SRCDIR	= 	./src
 SRCDIRS	= 	./utils \
 			./dataStructures \
-			./requestMonitor
+			./requestMonitor \
+			./main
 INCDIR	= 	./inc
 OBJDIR	= 	./obj
 VPATH	=	$(addprefix $(SRCDIR)/,$(SRCDIRS)) $(SRCDIR)

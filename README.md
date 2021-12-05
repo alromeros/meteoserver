@@ -113,7 +113,9 @@ meteoserver             # Main directory
 │   ├── dataStructures  # Data structures
 │   │   ├── lruCache.c
 │   │   └── requestQueue.c
-│   ├── main.c
+│   ├── main            # Functions for server initialization
+│   │   ├── main.c
+│   │   └── signalHandler.c
 │   ├── requestMonitor  # Code in charge of processing server-client communication (thread pool)
 │   │   └── requestMonitor.c
 │   └── utils           # Additional functions and algorithms
