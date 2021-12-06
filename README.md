@@ -8,7 +8,7 @@ The server makes use of a configurable thread-pool to handle client-server conne
 
 ### Requirements
 
-Ideally, **meteoserver** should only need GNU's **GCC** and **Make** for compilation.
+**meteoserver** only needs GNU's **GCC** and **Make** for compilation.
 
 The program has been developed using these versions of the tools:
 
@@ -48,7 +48,7 @@ Usage: ./meteoserver [-p port] [-C amount] [-t amount]
     -h                  Show this help message.
 ```
 
-Both the `-p` and `-C` arguments are mandatory, while the `-t` is completely optional.
+Both the `-p` and `-C` arguments are mandatory while the `-t` argument is completely optional.
 
 Some usage examples (server side):
 
@@ -115,6 +115,7 @@ meteoserver             # Main directory
 │   │   └── requestQueue.c
 │   ├── main            # Functions for server initialization
 │   │   ├── main.c
+│   │   ├── serverNetworking.c
 │   │   └── signalHandler.c
 │   ├── requestMonitor  # Code in charge of processing server-client communication (thread pool)
 │   │   └── requestMonitor.c

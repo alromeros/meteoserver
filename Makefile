@@ -22,6 +22,7 @@ endif
 # Source, object and binary files
 SRC		= 	main.c \
 			signalHandler.c \
+			serverNetworking.c \
 			crypto.c \
 			requestQueue.c \
 			lruCache.c \

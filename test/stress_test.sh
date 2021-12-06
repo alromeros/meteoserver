@@ -15,6 +15,8 @@ echo "efisoefoesifoiofoqGaJKUbGAwywaEoUWwObVjXT2b9zNT1h9KuiuoiueH32on7pESjK9U9pV
 
 # SIGUSR1
 kill -USR1 $(pidof meteoserver)
+kill -USR1 $(pidof meteoserver)
+kill -USR1 $(pidof meteoserver)
 
 sleep 1
 

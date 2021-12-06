@@ -126,6 +126,7 @@ typedef struct          serverState {
 void                *request_monitor(void *state);
 void                signal_modifier();
 void                empty_cache(serverState_t *state);
+void                setup_server_networking(serverState_t *state);
 
 // MD5-related definitions
 uint32_t            F(uint32_t X, uint32_t Y, uint32_t Z);
