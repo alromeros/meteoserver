@@ -1,6 +1,6 @@
 /*
  * [meteoserver]
- * main.c
+ * serverNetworking.c
  * November 23, 2021.
  *
  * Created by Álvaro Romero <alvromero96@gmail.com>
