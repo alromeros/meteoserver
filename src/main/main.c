@@ -39,7 +39,7 @@ static bool argument_parser(arguments_t *args, int argc, char **argv);
 * @param argv Pointer containing an array with all the program's arguments.
 * @return Error/success code for proper error handling.
 */
-static void setup_server(serverState_t **state, int argc, char **argv);
+static void initialize_server_data(serverState_t **state, int argc, char **argv);
 
 /**
 * @brief Destructor in charge of releasing all the server's resources, mainly after receiving a TERM signal.
@@ -48,10 +48,10 @@ static void setup_server(serverState_t **state, int argc, char **argv);
 static void teardown_server(serverState_t   *state);
 
 /**
-* @brief In charge of freeing resources before the program finishes its execution.
+* @brief In charge of freeing the program's currently allocated resources.
 * @param state General struct that contains information from the program current state.
 */
-static void free_server(serverState_t   *state);
+static void free_current_data(serverState_t   *state);
 
 /**
 * @brief Function that sets up the server-side networking functions, mainly socket, bind and listen.
@@ -59,6 +59,13 @@ static void free_server(serverState_t   *state);
 */
 static void setup_server_networking(serverState_t *state);
 
+/**
+* @brief Function in charge of:
+*   - Initializing the thread pool, in charge of monitoring and processing client requests.
+*   - Starting the loop in charge of accepting connections.
+* @param state General struct that contains information from the program current state.
+*/
+static void start_server(serverState_t *state);
 
 
 /* Definitions */
@@ -120,34 +127,35 @@ static bool parse_arguments(arguments_t *args, int argc, char **argv)
 }
 
 // In charge of initializing all the data structures needed to start the server
-static void setup_server(serverState_t **state, int argc, char **argv)
+static void initialize_server_data(serverState_t **state, int argc, char **argv)
 {
     *state = calloc(1, sizeof(serverState_t));
 
     if (*state == NULL)
         exit(ERROR);
-    
+
+    // Parse in-line arguments
     if (parse_arguments(&(*state)->settings, argc, argv) == false)
     {
         safe_free(*state);
         exit(ERROR);
     }
 
+    // Initialize the required data structures
     (*state)->lruCache = lru_cache_init((*state)->settings.cacheSize);
     (*state)->requestQueue = linked_queue_init();
     (*state)->thread_pool = calloc((*state)->settings.threadNumber, sizeof(pthread_t));
 
-    if ((*state)->lruCache == NULL ||
-        (*state)->requestQueue == NULL ||
-        (*state)->thread_pool == NULL)
+    // Error handling
+    if ((*state)->lruCache == NULL || (*state)->requestQueue == NULL || (*state)->thread_pool == NULL)
     {
-        free_server(*state);
+        free_current_data(*state);
         exit(ERROR);
     }
 }
 
 // In charge of freeing resources before the program finishes its execution
-static void free_server(serverState_t   *state)
+static void free_current_data(serverState_t   *state)
 {
     lru_cache_free(state->lruCache);
     linked_queue_free(state->requestQueue);
@@ -159,27 +167,27 @@ static void free_server(serverState_t   *state)
 // Destructor in charge of releasing all the server's resources, mainly after receiving a TERM signal
 static void teardown_server(serverState_t   *state)
 {
-    // Releases the latest conditional wait
+    // Release the latest conditional wait
     pthread_cond_signal(&(state->requestQueue->available));
 
-    // Waits for all the threads to finish their execution
+    // Wait for all the threads to finish their execution
     for (int i = 0; i < state->settings.threadNumber; i++)
         pthread_join(state->thread_pool[i], NULL);
 
-    // Prints each one of the cached elements
+    // Print each one of the cached elements
     for (size_t i = 0; i < state->lruCache->currentCapacity; i++)
     {
-        printf("Request: '%s' with hash: '%s'\n", state->lruCache->head->request, \
+        printf("Request: '%s' with hash: '%s'\n", state->lruCache->head->request,
                 state->lruCache->head->md5);
         state->lruCache->head = state->lruCache->head->next;
     }
     
     close(state->serverSocket);
-    free_server(state);
+    free_current_data(state);
     printf("Bye!\n");
 }
 
-// Function that sets up the server-side networking functions, mainly socket, bind and listen
+// Function that sets up the server-side networking functions: mainly socket, bind and listen
 static void setup_server_networking(serverState_t *state)
 {
     struct timeval      tv;
@@ -187,11 +195,14 @@ static void setup_server_networking(serverState_t *state)
     int                 errcode;
     int                 on = 1;
 
-    // Fill struct to set a timeout in setsockopt
+    /*
+    * Fill struct to set a timeout in setsockopt,
+    * mainly in order to avoid DoS attacks.
+    */
     tv.tv_sec = 1;
     tv.tv_usec = 0;
 
-    // Struct to configure socket binding
+    // Fill struct to configure socket binding
     sockaddr.sin_family = AF_INET;
     sockaddr.sin_addr.s_addr = INADDR_ANY;
     sockaddr.sin_port = htons(state->settings.port);
@@ -200,7 +211,13 @@ static void setup_server_networking(serverState_t *state)
     state->serverSocket = socket(AF_INET, SOCK_STREAM, 0);
     check_socket_error(state->serverSocket);
 
-    // Set up socket-related options
+    /*
+    * Set up socket-related options:
+    * - SO_REUSEADDR: To avoid blocking the socket after using the server.
+    * - SO_RECVTIMEO: To avoid receiving a DoS attack without resorting to
+    *                 functions like select or poll.
+    * - SO_SNDTIMEO: To avoid blocking client's connection if the send fails.
+    */
     errcode = setsockopt(state->serverSocket, SOL_SOCKET, SO_REUSEADDR, (char *)&on, sizeof(on));
     check_socket_error(errcode);
     errcode = setsockopt(state->serverSocket, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
@@ -217,29 +234,17 @@ static void setup_server_networking(serverState_t *state)
     check_socket_error(errcode);
 }
 
-
-/* main */
-
-int main(int argc, char **argv)
+// In charge of running the two main sections of the server
+static void start_server(serverState_t *state)
 {
-    serverState_t   *state;
-    int             connection;
+    int connection;
 
-    // Modify the behavior of SIGUSR1, SIGTERM and SIGINT signals
-    signal_modifier();
-
-    // Initialize the server's main data structures
-    setup_server(&state, argc, argv);
-
-    // Setup socket, bind and listen functions
-    setup_server_networking(state);
-
-    // Initialize thread pool in charge of processing client's requests
+    // Initialize thread pool in charge of processing client requests
     pthread_mutex_init(&(state->queueMutex), NULL);
     for (int i = 0; i < state->settings.threadNumber; i++)
         pthread_create(&(state->thread_pool[i]), NULL, request_monitor, state);
 
-    // Main loop
+    // Main loop in charge of accepting connections
     while (serverHandler & SERVER_ENABLED)
     {    
         if (serverHandler & SERVER_SIGUSR1)
@@ -250,7 +255,32 @@ int main(int argc, char **argv)
 
         linked_queue_push_ex(state->requestQueue, &connection);
     }
+}
 
+
+/* main */
+
+int main(int argc, char **argv)
+{
+    serverState_t   *state;
+
+    // Modify the behavior of SIGUSR1, SIGTERM and SIGINT signals
+    signal_modifier();
+
+    // Parse arguments and initialize the server main data structures
+    initialize_server_data(&state, argc, argv);
+
+    // Setup socket, bind and listen functions
+    setup_server_networking(state);
+
+    /*
+    * In charge of running the two main sections of the server:
+    *   - The thread pool, in charge of monitoring and processing client requests.
+    *   - The loop in charge of accepting connections.
+    */
+    start_server(state);
+
+    // Teardown server after receiving a TERM/INT signal
     teardown_server(state);
     return SUCCESS;
 }

@@ -266,7 +266,7 @@ char    *md5String(char *input)
 
     char *result = calloc(33, sizeof(char));
 
-    // Turns the hash into an human-readable C string
+    // Turns the uint8_t array into a C string
     for (size_t i = 0; i < 16; i++)
 	{
 		result[(i * 2) + 0] = hex[((ctx.digest[i] & 0xF0) >> 4)];

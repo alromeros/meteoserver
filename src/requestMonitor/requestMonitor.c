@@ -31,7 +31,7 @@ static int  tokenize_request(char *str, request_t *request);
 static bool read_client_request(request_t *request, int *connection);
 
 /**
-* @brief Function in charge of processing the information extracted from the connection
+* @brief Function in charge of processing the information extracted from the connection.
 * @param connection Client socket.
 * @param serverState Data structure containing the global server information.
 * @param request Data structure that holds the data from the request.
@@ -81,9 +81,8 @@ static int  tokenize_request(char *str, request_t *request)
     }
 
     // Condition to check if the request has the expected number of fields
-    if (requestIterator != REQUEST_FIELDS) {
+    if (requestIterator != REQUEST_FIELDS)
         return ERROR;
-    }
 
     return SUCCESS;
 }
@@ -94,10 +93,11 @@ static bool read_client_request(request_t *request, int *connection)
     char    buffer[MAXREQUESTSIZE + 1] = {0};
     ssize_t bytesRead;
     int     recvSocket;
-    
+
     if (!connection)
         return false;
 
+    // Read from the client's socket
     recvSocket = *connection;
     bytesRead = recv(recvSocket, buffer, MAXREQUESTSIZE + 1, 0);
 
@@ -110,10 +110,9 @@ static bool read_client_request(request_t *request, int *connection)
         close(recvSocket);
         return false;
     }
-    // Request is too long
     else if (bytesRead > MAXREQUESTSIZE)
     {
-        // Clear the client's input before sending error message
+        // Clear the client's input before sending the error message
         do
             memset(buffer, 0, MAXREQUESTSIZE + 1);
         while (recv(recvSocket, buffer, MAXREQUESTSIZE + 1, 0) > 0);
@@ -122,6 +121,7 @@ static bool read_client_request(request_t *request, int *connection)
         return false;
     }
 
+    // Extract each one of the fields from the request
     if (tokenize_request(buffer, request) == ERROR)
     {
         safe_free(request->msg);
@@ -133,11 +133,12 @@ static bool read_client_request(request_t *request, int *connection)
     return true;
 }
 
-// Function in charge of processing the information extracted from the connection
+// Function in charge of processing the request received from the client
 static void process_client_request(int connection, serverState_t *serverState, request_t *request)
 {
     uint8_t *md5 = NULL;
 
+    // Condition to check if the request message is already present in the cache
     if ((md5 = lru_cache_get_element(serverState->lruCache, request->msg)), !md5)
     {
         md5 = md5String(request->msg);
@@ -147,10 +148,9 @@ static void process_client_request(int connection, serverState_t *serverState, r
 
     send(connection, md5, 32, 0);
     send(connection, "\n", 1, 0);
-    
-    safe_free(request->msg);
-    request->mseconds = 0;
 
+    request->mseconds = 0;
+    safe_free(request->msg);
     close(connection);
 }
 
@@ -167,14 +167,16 @@ void    *request_monitor(void *state)
 
     while (serverHandler & SERVER_ENABLED)
     {
+        // When available, obtain accepted connections
         pthread_mutex_lock(&serverState->queueMutex);
         clientSocket = linked_queue_pop_ex(queue);
         pthread_mutex_unlock(&serverState->queueMutex);
 
-        // Read from the connection
+        // Read the request from the client socket 
         if (read_client_request(&request, clientSocket) == false)
             continue;
 
+        // Function in charge of processing the request
         process_client_request(*clientSocket, state, &request);
     }
 

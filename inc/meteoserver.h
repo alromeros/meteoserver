@@ -29,20 +29,20 @@
 #include <stdint.h>
 
 // Global defines
-#define SERVER_ENABLED      0x01
-#define SERVER_SIGUSR1      0x02
-#define SERVER_SIGTERM      0x04
-#define ERROR               1
-#define SUCCESS             0
-#define THREAD_POOL_SIZE    8
-#define SOCKETERR          -1
-#define MAXREQUESTSIZE      4096
-#define REQUEST_FIELDS      3
+#define SERVER_ENABLED          0x01
+#define SERVER_SIGUSR1          0x02
+#define SERVER_SIGTERM          0x04
+#define SOCKETERR               -1
+#define ERROR                   1
+#define SUCCESS                 0
+#define THREAD_POOL_SIZE        8
+#define MAXREQUESTSIZE          4096
+#define REQUEST_FIELDS          3
 
 // Formatting
-#define SEND_TIMEOUT        "Timeout.\n"
-#define SEND_LONG_REQUEST   "Request is too long.\n"
-#define SEND_INVALID_REQUEST "Request is not valid.\n"
+#define SEND_TIMEOUT            "Timeout.\n"
+#define SEND_LONG_REQUEST       "Request is too long.\n"
+#define SEND_INVALID_REQUEST    "Request is not valid.\n"
 
 // Useful macros
 #define print_error()           fprintf(stderr, "Error '%d': '%s'", errno, strerror(errno))

@@ -15,7 +15,7 @@
 
 
 /**
-* @brief Function in charge of searching for elements in the cache,.
+* @brief Function in charge of searching for elements in the cache,
 *        instead of the standard hash table.
 * @param cachePool Double pointer that contains each one of the nodes of the cache.
 * @param request Request that's searched in the cache.
@@ -136,8 +136,8 @@ char    *lru_cache_get_element(lruCache_t *cache, char *request)
 
         cache->head = tmpNode;
     }
-    
     pthread_mutex_unlock(&(cache->mutex));
+
     return tmpNode ? tmpNode->md5 : NULL;
 }
 

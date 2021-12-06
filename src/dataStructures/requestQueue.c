@@ -15,57 +15,57 @@
 
 
 /**
- * @brief Allocs and initializes a new queue structure
- * @return Initialized queue structure
+ * @brief Allocs and initializes a new queue structure.
+ * @return Initialized queue structure.
  **/
 linked_queue_t *linked_queue_init();
 
 /**
- * @brief Frees an existent queue
- * @param queue to be freed
+ * @brief Frees an existent queue.
+ * @param queue Queue to be freed.
  **/
 void linked_queue_free(linked_queue_t *queue);
 
 /** 
- * @brief Inserts an element into the queue
- * @param queue Queue that'll receive the element
- * @param data Data to be inserted
- * @return Node structure pushed to the queue
+ * @brief Inserts an element into the queue.
+ * @param queue Queue that'll receive the element.
+ * @param data Data to be inserted.
+ * @return Node pushed to the queue.
  **/
 queue_node_t *linked_queue_push(linked_queue_t *queue, void *data);
 
 /** 
- * @brief Wrapper for queue_push that adds mutual exclusion
- * @param queue Queue that'll receive the element
- * @param data Data to be inserted
- * @return Node structure pushed to the queue
+ * @brief Wrapper for queue_push that adds mutual exclusion.
+ * @param queue Queue that'll receive the element.
+ * @param data Data to be inserted.
+ * @return Node structure pushed to the queue.
  **/
 queue_node_t *linked_queue_push_ex(linked_queue_t *queue, void *data);
 
 /**
- * @brief Retrieves next item in the queue
- * @param queue Queue
- * @return Element if queue has a next, NULL if queue is empty
+ * @brief Retrieves next item in the queue.
+ * @param queue Queue to be searched.
+ * @return Element if queue has a next, NULL if queue is empty.
  **/
 void *linked_queue_pop(linked_queue_t *queue);
 
 /**
- * @brief Wrapper for queue_push that adds mutual exclusion
- * @param queue Queue
- * @return Next element in the queue
+ * @brief Wrapper for queue_push that adds mutual exclusion.
+ * @param queue Queue that'll receive the element.
+ * @return Next element in the queue.
  **/
 void *linked_queue_pop_ex(linked_queue_t *queue);
 
 /**
- * @brief Appends a node to the end of the queue
- * @param queue Queue where the node will be appended
- * @param node  Node that will be appended
+ * @brief Appends a node to the end of the queue.
+ * @param queue Queue where the node will be appended.
+ * @param node  Node that will be appended.
  **/
 static void linked_queue_append_node(linked_queue_t *queue, queue_node_t *node);
 
 /**
- * @brief Unlinks the last node of the queue
- * @param queue to be modified
+ * @brief Unlinks the last node of the queue.
+ * @param queue Queue to be modified.
  **/
 static void linked_queue_pop_node(linked_queue_t *queue);
 
@@ -130,13 +130,9 @@ queue_node_t *linked_queue_push_ex(linked_queue_t *queue, void *data)
 // Retrieves next item in the queue
 void *linked_queue_pop(linked_queue_t *queue)
 {
-    void *data;
+    void *data = NULL;
 
-    if (!queue->first)
-    {
-       data = NULL;
-    }
-    else
+    if (queue->first)
     {
         data = queue->first->data;
         linked_queue_pop_node(queue);
