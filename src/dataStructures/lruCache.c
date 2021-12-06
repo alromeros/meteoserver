@@ -46,7 +46,7 @@ void lru_cache_free(lruCache_t *cache);
 char    *lru_cache_get_element(lruCache_t *cache, char *request);
 
 /**
-* @brief Function of updating the cache with a new element.
+* @brief Function in charge of updating the cache with a new element.
 * @param cache Cache to be updated.
 * @param request Request to be added to the queue.
 * @param value Value to be cached along the request.
@@ -58,7 +58,7 @@ void lru_cache_update_node(lruCache_t *cache, char *request, char *value);
 /* Definitions */
 
 
-// Function in charge of searching for elements in the cache instead of the standard hash table
+// Function in charge of searching for elements in the cache, instead of the standard hash table
 lruCacheNode_t *lru_find_element(lruCacheNode_t **cachePool, char *request, size_t currentCapacity)
 {
     lruCacheNode_t *ret = NULL;
@@ -141,7 +141,7 @@ char    *lru_cache_get_element(lruCache_t *cache, char *request)
     return tmpNode ? tmpNode->md5 : NULL;
 }
 
-// Function of updating the cache with a new element
+// Function in charge of updating the cache with a new element
 void lru_cache_update_node(lruCache_t *cache, char *request, char *value)
 {
     lruCacheNode_t *tmpNode = NULL;
