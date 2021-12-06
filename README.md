@@ -1,6 +1,6 @@
 # meteoserver
 
-**meteoserver** is a simple server designed to process TCP requests, storing their content as a MD5 hash in a LRU cache.
+**meteoserver** is a simple multithreaded server designed to process TCP requests, storing their content as a MD5 hash in a LRU cache.
 
 The server makes use of a configurable thread-pool to handle client-server connection and processing, while the main thread is in charge of accepting new connections and adding them to a queue.
 

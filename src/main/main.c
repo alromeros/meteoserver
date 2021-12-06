@@ -200,6 +200,7 @@ static void start_server(serverState_t *state)
         if ((connection = accept(state->serverSocket, NULL, NULL)) < 0)
             continue;
 
+        // Add connection to the thread-safe linked queue
         linked_queue_push_ex(state->requestQueue, &connection);
     }
 }
